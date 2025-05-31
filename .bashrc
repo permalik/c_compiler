@@ -1,9 +1,9 @@
 # Custom Prompt
-export PS1="\n\[\e[1;32m\][dev_shell](c_compiler) \w\n❯ \[\e[0m\]"
+export PS1="\n\[\e[1;32m\][dev_shell](c-compiler) \w\n❯ \[\e[0m\]"
 
 # Aliases
-alias docker-build-dev="docker build -t c_compiler:dev ."
-alias docker-run-dev="docker run --rm c_compiler:dev"
+alias docker-build-dev="docker build -t c-compiler:dev ."
+alias docker-run-dev="docker run --rm c-compiler:dev"
 alias nv="nvim"
 alias glr="pretty_git_log"
 alias gs="git status"

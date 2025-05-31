@@ -1,56 +1,48 @@
 {
-  description = "c_compiler";
+  description = "c-compiler";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/release-24.11";
-    nix-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
     flake-utils.url = "github:numtide/flake-utils";
-    zig-overlay.url = "github:mitchellh/zig-overlay";
   };
 
   outputs = {
     self,
     nixpkgs,
-    nix-unstable,
     flake-utils,
-    zig-overlay,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        zigPackage = zig-overlay.packages.${system}."0.14.0";
-        pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        formatter = pkgs.nixpkgs-fmt;
-        devShells.default = pkgs.mkShell {
-          name = "c_compiler";
-          packages = with pkgs; [
-            alejandra
-            pre-commit
-          ];
-          nativeBuildInputs = [
-            zigPackage
-          ];
-
-          shellHook = with pkgs; ''
-            # Source .bashrc
-            . .bashrc
-          '';
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = false;
         };
 
-        packages.default = pkgs.stdenv.mkDerivation {
-          name = "c_compiler";
-          src = ./.;
+        jailbreakUnbreak = pkg:
+          pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: {meta = {};}));
 
-          XDG_CACHE_HOME = "${placeholder "out"}";
+        packageName = "c-compiler";
+      in {
+        packages.${packageName} =
+          # (ref:haskell-package-def)
+          pkgs.haskellPackages.callCabal2nix packageName self rec {
+            # Dependency overrides
+          };
 
-          # buildInputs = [];
-          buildPhase = ''
-            ${zigPackage}/bin/zig build
-          '';
+        defaultPackage = self.packages.${system}.${packageName};
 
-          installPhase = ''
-            ${zigPackage}/bin/zig build install --prefix $out
-            rm -rf $out/zig
+        devShells.default = pkgs.mkShell {
+          buildInputs = [
+            pkgs.alejandra
+            pkgs.haskellPackages.haskell-language-server
+            pkgs.haskellPackages.ghcid
+            pkgs.haskellPackages.cabal-install
+          ];
+
+          inputsFrom = builtins.attrValues self.packages.${system};
+
+          shellHook = ''
+            . .bashrc
           '';
         };
       }
