@@ -1,2 +1,2 @@
-# c_compiler
-language processing:C Compiler in Zig
+# c-compiler
+language processing:C Compiler in Haskell
